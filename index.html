@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Gold Hunter — 40K L4</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    ::-webkit-scrollbar { width: 0; }
+
+    :root {
+      --gold: #C9A84C;
+      --gold2: #E8C86A;
+      --green: #4ADE80;
+      --red: #F87171;
+      --blue: #60A5FA;
+      --bg: #080C10;
+      --bg2: #0D1117;
+      --border: #1E2530;
+      --muted: #5A6270;
+      --text: #E8E0D0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      max-width: 430px;
+      margin: 0 auto;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    @keyframes ping {
+      0%, 100% { transform: scale(1); opacity: 0.4; }
+      50% { transform: scale(2.2); opacity: 0; }
+    }
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 8px #C9A84C33; }
+      50% { box-shadow: 0 0 22px #C9A84C77; }
+    }
+    @keyframes slideIn {
+      from { transform: translateY(-16px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── HEADER ── */
+    .header {
+      padding: 20px 20px 14px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, #0D1117 0%, transparent 100%);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .brand-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 26px;
+      letter-spacing: 3px;
+      color: var(--gold);
+      line-height: 1;
+    }
+
+    .slogan {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 13px;
+      letter-spacing: 4px;
+      background: linear-gradient(90deg, #C9A84C, #E8C86A, #FFF0A0, #E8C86A, #C9A84C);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 3s linear infinite;
+      margin-top: 2px;
+    }
+
+    .slogan-sub {
+      font-size: 8px;
+      color: var(--muted);
+      letter-spacing: 2px;
+      margin-top: 1px;
+    }
+
+    .status-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      position: relative;
+      display: inline-block;
+    }
+    .status-dot::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      animation: ping 1.4s cubic-bezier(0,0,0.2,1) infinite;
+    }
+    .dot-green { background: var(--green); }
+    .dot-green::before { background: var(--green); opacity: 0.4; }
+    .dot-red { background: var(--red); }
+    .dot-red::before { background: var(--red); opacity: 0.4; }
+    .dot-gold { background: var(--gold); }
+    .dot-gold::before { background: var(--gold); opacity: 0.4; }
+
+    /* ── PRICE CARD ── */
+    .price-card {
+      margin-top: 14px;
+      padding: 14px 16px;
+      background: var(--bg2);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      animation: glow 3s ease-in-out infinite;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .price-label {
+      font-size: 8px;
+      color: var(--muted);
+      letter-spacing: 2px;
+      margin-bottom: 4px;
+    }
+
+    .price-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 38px;
+      letter-spacing: 2px;
+      transition: color 0.4s;
+    }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+    }
+
+    .stat-item {
+      background: var(--bg);
+      padding: 10px 0;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 16px;
+      letter-spacing: 1px;
+    }
+
+    .stat-label {
+      font-size: 8px;
+      color: var(--muted);
+      letter-spacing: 1.5px;
+      margin-top: 2px;
+    }
+
+    /* ── TABS ── */
+    .tabs {
+      display: flex;
+      padding: 10px 20px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      padding: 7px 14px;
+      cursor: pointer;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .tab-btn.active {
+      color: var(--gold);
+      border-bottom-color: var(--gold);
+    }
+
+    /* ── CONTENT ── */
+    .content {
+      padding: 12px 20px 120px;
+    }
+
+    /* ── SIGNAL CARD ── */
+    .signal-card {
+      background: var(--bg2);
+      border: 1px solid #1E3A2A;
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .signal-card.wait { border-color: var(--border); }
+    .signal-card.alert { border-color: #60A5FA33; }
+    .signal-card.close { border-color: var(--border); }
+
+    .signal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      padding: 3px 10px;
+      border-radius: 6px;
+    }
+
+    .badge-buy { background: #4ADE8022; color: var(--green); border: 1px solid #4ADE8044; }
+    .badge-sell { background: #F8717122; color: var(--red); border: 1px solid #F8717144; }
+    .badge-wait { background: #94A3B822; color: #94A3B8; border: 1px solid #94A3B844; }
+
+    .signal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .signal-cell {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 8px 10px;
+      text-align: center;
+    }
+
+    .cell-label {
+      font-size: 7px;
+      color: var(--muted);
+      letter-spacing: 1.5px;
+      margin-bottom: 3px;
+    }
+
+    .cell-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 13px;
+      letter-spacing: 1px;
+    }
+
+    /* ── PROGRESS BAR ── */
+    .progress-track {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold), var(--green));
+      border-radius: 3px;
+      transition: width 1.2s ease;
+    }
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 430px;
+      background: linear-gradient(0deg, #080C10 60%, transparent);
+      padding: 16px 20px 30px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .nav-inner {
+      display: inline-flex;
+      gap: 2px;
+      background: var(--bg2);
+      border-radius: 14px;
+      padding: 4px;
+      border: 1px solid var(--border);
+    }
+
+    .nav-btn {
+      background: none;
+      border: none;
+      border-radius: 10px;
+      padding: 8px 18px;
+      cursor: pointer;
+      font-size: 10px;
+      letter-spacing: 1px;
+      color: var(--muted);
+      transition: all 0.2s;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .nav-btn.active {
+      background: var(--gold);
+      color: var(--bg);
+    }
+
+    /* ── TOAST ── */
+    .toast {
+      margin: 10px 20px 0;
+      padding: 10px 14px;
+      background: #C9A84C12;
+      border: 1px solid #C9A84C44;
+      border-radius: 10px;
+      animation: slideIn 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 10px;
+      color: var(--gold);
+      letter-spacing: 1px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 50px 20px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .raw-msg {
+      background: var(--bg2);
+      border-radius: 14px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      white-space: pre-wrap;
+      color: var(--gold);
+      font-size: 10px;
+      line-height: 1.8;
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* ── AMBIENT ── */
+    .ambient {
+      position: fixed;
+      top: -80px; right: -80px;
+      width: 260px; height: 260px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #C9A84C14 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* ── 40KL4 BANNER ── */
+    .banner-40k {
+      margin: 12px 20px 0;
+      padding: 10px 16px;
+      background: linear-gradient(135deg, #0D1117 0%, #131A24 100%);
+      border: 1px solid #C9A84C33;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .banner-left {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 5px;
+      background: linear-gradient(90deg, #C9A84C, #FFF0A0, #C9A84C);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 4s linear infinite;
+    }
+
+    .banner-right {
+      text-align: right;
+    }
+
+    .banner-right .b1 {
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 2px;
+    }
+
+    .banner-right .b2 {
+      font-size: 11px;
+      color: var(--gold);
+      letter-spacing: 1px;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="ambient"></div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="brand-title">GOLD HUNTER</div>
+      <div class="slogan">40K L4</div>
+      <div class="slogan-sub">40 000€ • LEVEL 4</div>
+    </div>
+    <div style="text-align:right">
+      <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">
+        <span class="status-dot dot-red" id="dot"></span>
+        <span style="font-size:9px;letter-spacing:1px" id="status-text">CONNEXION…</span>
+      </div>
+      <div style="font-size:8px;color:var(--muted);margin-top:4px" id="last-update"></div>
+    </div>
+  </div>
+
+  <!-- Prix live -->
+  <div class="price-card">
+    <div>
+      <div class="price-label">XAU/USD • ESTIMÉ</div>
+      <div class="price-value" id="price-display" style="color:var(--green)">—</div>
+    </div>
+    <div style="text-align:right">
+      <canvas id="sparkline" width="100" height="36"></canvas>
+      <div style="font-size:11px;margin-top:3px" id="price-delta"></div>
+    </div>
+  </div>
+</div>
+
+<!-- BANNER 40KL4 -->
+<div class="banner-40k">
+  <div class="banner-left">40K L4</div>
+  <div class="banner-right">
+    <div class="b1">OBJECTIF</div>
+    <div class="b2">40 000€ • LEVEL 4</div>
+  </div>
+</div>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat-item">
+    <div class="stat-value" style="color:var(--gold)" id="stat-signals">0</div>
+    <div class="stat-label">SIGNAUX</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-value" style="color:var(--green)" id="stat-capital">50€</div>
+    <div class="stat-label">CAPITAL</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-value" style="color:var(--blue)" id="stat-alerts">0</div>
+    <div class="stat-label">ALERTES</div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('signals', this)">📡 Signaux</button>
+  <button class="tab-btn" onclick="switchTab('detail', this)">📋 Détail</button>
+  <button class="tab-btn" onclick="switchTab('stats', this)">📊 Stats</button>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast" style="display:none">
+  <span class="status-dot dot-gold"></span>
+  NOUVEAU MESSAGE TELEGRAM
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+  <div id="tab-signals"></div>
+  <div id="tab-detail" style="display:none"></div>
+  <div id="tab-stats" style="display:none"></div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="nav-inner">
+    <button class="nav-btn active" onclick="switchTab('signals', null, this)">📡 Signaux</button>
+    <button class="nav-btn" onclick="switchTab('detail', null, this)">📋 Détail</button>
+    <button class="nav-btn" onclick="switchTab('stats', null, this)">📊 Stats</button>
+  </div>
+</div>
+
+<script>
+  // ── Config ──────────────────────────────────────────────────────────────────
+  const BOT_TOKEN = "8699916911:AAEVUvgQZjhk0L4t_kza8Nax0RaRXi4Lycw";
+  const CHAT_ID   = "6848492273";
+  const TG_API    = `https://api.telegram.org/bot${BOT_TOKEN}`;
+  const POLL_MS   = 20000;
+
+  // ── State ───────────────────────────────────────────────────────────────────
+  let signals      = [];
+  let livePrice    = null;
+  let prevPrice    = null;
+  let priceHistory = [];
+  let prevCount    = 0;
+  let currentTab   = 'signals';
+
+  // ── Telegram Init ────────────────────────────────────────────────────────────
+  if (window.Telegram?.WebApp) {
+    window.Telegram.WebApp.ready();
+    window.Telegram.WebApp.expand();
+  }
+
+  // ── Parse message Telegram ───────────────────────────────────────────────────
+  function parseSignal(text, date) {
+    if (!text) return null;
+    const isSignal = text.includes("GOLD HUNTER") && text.includes("SIGNAL");
+    const isAlert  = text.includes("ALERTE ANTICIPATOIRE");
+    const isClose  = text.includes("TRADE FERMÉ");
+    if (!isSignal && !isAlert && !isClose) return null;
+
+    const get = (re) => { const m = text.match(re); return m ? m[1].trim() : null; };
+    const time = new Date(date * 1000).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+    const dateStr = new Date(date * 1000).toLocaleDateString("fr-FR");
+
+    if (isClose) {
+      return { id: date, type: "close", time, date: dateStr, raw: text,
+        pnl: get(/Résultat\s*:\s*([+\-][\d.]+€)/),
+        direction: get(/Direction\s*:\s*(\w+)/),
+        entry: parseFloat(get(/Entrée\s*:\s*([\d.]+)/) || 0) };
+    }
+    if (isAlert) {
+      return { id: date, type: "alert", time, date: dateStr, raw: text,
+        direction: text.includes("ALERTE ANTICIPATOIRE BUY") ? "BUY" : "SELL" };
+    }
+
+    const direction = get(/\b(BUY|SELL|WAIT)\b/);
+    const entry     = parseFloat(get(/Position d'entrée\s*:\s*([\d.]+)/) || 0);
+    const sl        = parseFloat(get(/Stop Loss\s*:\s*([\d.]+)/) || 0);
+    const tp        = parseFloat(get(/Take Profit\s*:\s*([\d.]+)/) || 0);
+    const rr        = get(/RR\s*:\s*1:([\d.]+)/);
+    const capital   = parseFloat(get(/Capital actuel\s*:\s*([\d.]+)/) || 50);
+    const objectif  = parseFloat(get(/Objectif\s*:\s*([\d.]+)/) || 10000);
+    const progression = parseFloat(get(/Progression\s*:\s*([\d.]+)%/) || 0);
+    const rsi       = get(/RSI\(14\)\s*:\s*([\d.]+)/);
+    const confiance = parseInt(get(/Confiance\s*:\s*(\d+)%/) || 0);
+    const trend     = text.includes("HAUSSIERE") ? "HAUSSIERE 📈" : "BAISSIERE 📉";
+
+    return { id: date, type: "signal", time, date: dateStr, raw: text,
+      direction, confiance, entry, sl, tp,
+      rr: rr ? parseFloat(rr) : null,
+      capital, objectif, progression,
+      rsi: rsi ? parseFloat(rsi) : null,
+      trend, status: direction === "WAIT" ? "wait" : "active" };
+  }
+
+  // ── Fetch Telegram ───────────────────────────────────────────────────────────
+  async function fetchMessages() {
+    try {
+      const res  = await fetch(`${TG_API}/getUpdates?limit=100`);
+      const data = await res.json();
+      if (!data.ok) throw new Error();
+
+      const parsed = [];
+      for (const u of data.result || []) {
+        const msg = u.message;
+        if (!msg) continue;
+        if (String(msg.chat.id) !== CHAT_ID) continue;
+        const s = parseSignal(msg.text, msg.date);
+        if (s) parsed.push(s);
+      }
+      parsed.sort((a, b) => b.id - a.id);
+
+      if (parsed.length > prevCount && prevCount > 0) showToast();
+      prevCount = parsed.length;
+      signals   = parsed;
+
+      // Prix estimé depuis le dernier signal
+      const last = parsed.find(s => s.entry > 0);
+      if (last && !livePrice) livePrice = last.entry;
+
+      setConnected(true);
+      render();
+    } catch {
+      setConnected(false);
+    }
+  }
+
+  // ── Prix simulé ─────────────────────────────────────────────────────────────
+  function tickPrice() {
+    if (!livePrice) return;
+    prevPrice = livePrice;
+    livePrice = +(livePrice + (Math.random() - 0.49) * 2.5).toFixed(2);
+    priceHistory.push(livePrice);
+    if (priceHistory.length > 14) priceHistory.shift();
+    renderPrice();
+  }
+
+  // ── UI helpers ───────────────────────────────────────────────────────────────
+  function setConnected(ok) {
+    const dot  = document.getElementById('dot');
+    const txt  = document.getElementById('status-text');
+    const upd  = document.getElementById('last-update');
+    dot.className = 'status-dot ' + (ok ? 'dot-green' : 'dot-red');
+    txt.style.color = ok ? 'var(--green)' : 'var(--red)';
+    txt.textContent = ok ? 'TELEGRAM ✓' : 'ERREUR';
+    if (ok) upd.textContent = new Date().toLocaleTimeString('fr-FR');
+  }
+
+  function showToast() {
+    const t = document.getElementById('toast');
+    t.style.display = 'flex';
+    setTimeout(() => t.style.display = 'none', 4000);
+  }
+
+  function switchTab(name, tabBtn, navBtn) {
+    currentTab = name;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    if (tabBtn) tabBtn.classList.add('active');
+    if (navBtn) navBtn.classList.add('active');
+    // Sync both
+    document.querySelectorAll('.tab-btn').forEach(b => {
+      if (b.getAttribute('onclick')?.includes(`'${name}'`)) b.classList.add('active');
+    });
+    document.querySelectorAll('.nav-btn').forEach(b => {
+      if (b.getAttribute('onclick')?.includes(`'${name}'`)) b.classList.add('active');
+    });
+    ['signals','detail','stats'].forEach(t => {
+      document.getElementById('tab-' + t).style.display = t === name ? 'block' : 'none';
+    });
+    render();
+  }
+
+  // ── Sparkline ────────────────────────────────────────────────────────────────
+  function renderSparkline() {
+    const canvas = document.getElementById('sparkline');
+    const ctx    = canvas.getContext('2d');
+    ctx.clearRect(0, 0, 100, 36);
+    if (priceHistory.length < 2) return;
+    const min = Math.min(...priceHistory), max = Math.max(...priceHistory);
+    const range = max - min || 1;
+    const color = livePrice >= (prevPrice || livePrice) ? '#4ADE80' : '#F87171';
+    ctx.strokeStyle = color;
+    ctx.lineWidth   = 1.5;
+    ctx.lineJoin    = 'round';
+    ctx.beginPath();
+    priceHistory.forEach((v, i) => {
+      const x = (i / (priceHistory.length - 1)) * 100;
+      const y = 36 - ((v - min) / range) * 36;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  }
+
+  function renderPrice() {
+    const el    = document.getElementById('price-display');
+    const delta = document.getElementById('price-delta');
+    const up    = livePrice >= (prevPrice || livePrice);
+    el.style.color = up ? 'var(--green)' : 'var(--red)';
+    el.textContent = livePrice ? livePrice.toFixed(2) : '—';
+    if (prevPrice && livePrice) {
+      const diff = Math.abs(livePrice - prevPrice).toFixed(2);
+      delta.style.color = up ? 'var(--green)' : 'var(--red)';
+      delta.textContent = (up ? '▲ ' : '▼ ') + diff;
+    }
+    renderSparkline();
+  }
+
+  // ── Render ───────────────────────────────────────────────────────────────────
+  function render() {
+    const signalList = signals.filter(s => s.type === 'signal');
+    const alerts     = signals.filter(s => s.type === 'alert');
+    const closes     = signals.filter(s => s.type === 'close');
+    const lastSig    = signalList[0];
+
+    // Stats bar
+    document.getElementById('stat-signals').textContent = signalList.length;
+    document.getElementById('stat-capital').textContent = lastSig ? lastSig.capital.toFixed(0) + '€' : '50€';
+    document.getElementById('stat-alerts').textContent  = alerts.length;
+
+    renderPrice();
+
+    if (currentTab === 'signals') renderSignals();
+    if (currentTab === 'detail')  renderDetail(lastSig);
+    if (currentTab === 'stats')   renderStats(signalList, alerts, closes, lastSig);
+  }
+
+  function renderSignals() {
+    const el = document.getElementById('tab-signals');
+    if (signals.length === 0) {
+      el.innerHTML = `<div class="empty-state"><div style="font-size:28px;margin-bottom:10px">📡</div>Aucun signal reçu.<br>Lance /analyse sur Telegram.</div>`;
+      return;
+    }
+    el.innerHTML = signals.map(s => {
+      if (s.type === 'signal') {
+        const badgeClass = s.direction === 'BUY' ? 'badge-buy' : s.direction === 'SELL' ? 'badge-sell' : 'badge-wait';
+        const grid = s.direction !== 'WAIT' ? `
+          <div class="signal-grid">
+            <div class="signal-cell"><div class="cell-label">ENTRÉE</div><div class="cell-value" style="color:var(--text)">${s.entry.toFixed(2)}</div></div>
+            <div class="signal-cell"><div class="cell-label">SL</div><div class="cell-value" style="color:var(--red)">${s.sl.toFixed(2)}</div></div>
+            <div class="signal-cell"><div class="cell-label">TP</div><div class="cell-value" style="color:var(--green)">${s.tp.toFixed(2)}</div></div>
+          </div>
+          ${s.rr ? `<div style="font-size:9px;color:var(--muted)">RR 1:${s.rr} • RSI ${s.rsi ?? '—'} • ${(s.trend||'').replace(' 📈','').replace(' 📉','')}</div>` : ''}
+        ` : `<div style="font-size:10px;color:var(--muted);font-style:italic">⏸ En attente d'une meilleure opportunité</div>`;
+        return `
+          <div class="signal-card ${s.status}">
+            <div class="signal-header">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span class="badge ${badgeClass}">${s.direction}</span>
+                <span style="font-size:12px;color:var(--gold)">XAUUSD</span>
+                ${s.confiance ? `<span style="font-size:9px;color:var(--muted)">${s.confiance}%</span>` : ''}
+              </div>
+              <span style="font-size:8px;color:var(--muted)">${s.time} • ${s.date}</span>
+            </div>
+            ${grid}
+          </div>`;
+      }
+      if (s.type === 'alert') return `
+        <div class="signal-card alert">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:18px">⚠️</span>
+            <div>
+              <div style="font-size:11px;color:var(--blue);letter-spacing:1px">ALERTE ${s.direction}</div>
+              <div style="font-size:9px;color:var(--muted);margin-top:2px">${s.time} • ${s.date}</div>
+            </div>
+          </div>
+        </div>`;
+      if (s.type === 'close') {
+        const pos = s.pnl && s.pnl.startsWith('+');
+        return `
+          <div class="signal-card close">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div style="font-size:11px;color:var(--text);letter-spacing:1px">✅ TRADE FERMÉ • ${s.direction || ''}</div>
+                <div style="font-size:9px;color:var(--muted);margin-top:2px">${s.time} • ${s.date}</div>
+              </div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:${pos ? 'var(--green)' : 'var(--red)'}">${s.pnl || '—'}</div>
+            </div>
+          </div>`;
+      }
+      return '';
+    }).join('');
+  }
+
+  function renderDetail(lastSig) {
+    const el = document.getElementById('tab-detail');
+    if (!lastSig) {
+      el.innerHTML = '<div class="empty-state">Aucun signal disponible.</div>';
+      return;
+    }
+    el.innerHTML = `
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:12px">DERNIER MESSAGE COMPLET</div>
+      <div class="raw-msg">${lastSig.raw.replace(/</g,'&lt;')}</div>`;
+  }
+
+  function renderStats(signalList, alerts, closes, lastSig) {
+    const capital    = lastSig?.capital ?? 50;
+    const objectif   = lastSig?.objectif ?? 10000;
+    const progression = Math.min(100, lastSig?.progression ?? 0);
+    const el = document.getElementById('tab-stats');
+    el.innerHTML = `
+      <div style="background:var(--bg2);border-radius:14px;padding:16px;border:1px solid var(--border);margin-bottom:12px">
+        <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:12px">CAPITAL VS OBJECTIF</div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <span style="font-size:9px;color:var(--muted)">Capital actuel</span>
+          <span style="font-size:13px;color:var(--green);font-family:'Bebas Neue',sans-serif">${capital.toFixed(2)}€</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+          <span style="font-size:9px;color:var(--muted)">Objectif</span>
+          <span style="font-size:13px;color:var(--gold);font-family:'Bebas Neue',sans-serif">${objectif.toFixed(0)}€</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" style="width:${progression}%"></div>
+        </div>
+        <div style="font-size:8px;color:var(--muted);margin-top:6px;text-align:right">${progression.toFixed(1)}% atteint</div>
+      </div>
+
+      <div style="background:var(--bg2);border-radius:14px;padding:16px;border:1px solid var(--border);margin-bottom:12px">
+        <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:10px">🏆 40K L4 — MISSION</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:11px;color:var(--muted);letter-spacing:2px;margin-bottom:6px">DE 50€ À 40 000€</div>
+        <div class="progress-track" style="height:8px">
+          <div class="progress-fill" style="width:${Math.min(100,(capital-50)/(40000-50)*100).toFixed(2)}%"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px">
+          <span style="font-size:8px;color:var(--muted)">50€</span>
+          <span style="font-size:8px;color:var(--gold)">${((capital-50)/(40000-50)*100).toFixed(3)}% accompli</span>
+          <span style="font-size:8px;color:var(--muted)">40 000€</span>
+        </div>
+      </div>
+
+      ${[
+        { label: 'Signaux reçus', value: signalList.length, color: 'var(--gold)' },
+        { label: 'Alertes reçues', value: alerts.length, color: 'var(--blue)' },
+        { label: 'Trades fermés', value: closes.length, color: 'var(--green)' },
+      ].map(s => `
+        <div style="background:var(--bg2);border-radius:14px;padding:14px 16px;border:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <span style="font-size:10px;color:var(--muted)">${s.label}</span>
+          <span style="font-size:20px;font-family:'Bebas Neue',sans-serif;color:${s.color}">${s.value}</span>
+        </div>`).join('')}
+    `;
+  }
+
+  // ── Init ─────────────────────────────────────────────────────────────────────
+  fetchMessages();
+  setInterval(fetchMessages, POLL_MS);
+  setInterval(tickPrice, 3000);
+</script>
+</body>
+</html>
